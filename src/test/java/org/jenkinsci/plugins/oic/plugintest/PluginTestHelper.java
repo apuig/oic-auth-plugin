@@ -271,7 +271,7 @@ public class PluginTestHelper {
     }
 
     /**
-     * performs a GET request using a basic authorization header
+     * performs a GET request using a basic authorization header, following redirects
      *
      * @param user  - The user id
      * @param token - the password api token to user
@@ -280,14 +280,27 @@ public class PluginTestHelper {
      */
     public static HttpResponse<String> getPageWithGet(JenkinsRule jenkinsRule, String user, String token, String url)
             throws IOException, InterruptedException {
+        return getPageWithGet(jenkinsRule, user, token, url, HttpClient.Redirect.ALWAYS);
+    }
+
+    /**
+     * performs a GET request using a basic authorization header
+     *
+     * @param user     - The user id
+     * @param token    - the password api token to user
+     * @param url      - the url to request
+     * @param redirect - whether to follow redirects (use NEVER to observe a 302 directly)
+     * @return HttpResponse
+     */
+    public static HttpResponse<String> getPageWithGet(
+            JenkinsRule jenkinsRule, String user, String token, String url, HttpClient.Redirect redirect)
+            throws IOException, InterruptedException {
         // fix up the url, if needed
         if (url.startsWith("/")) {
             url = url.substring(1);
         }
 
-        HttpClient c = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.ALWAYS)
-                .build();
+        HttpClient c = HttpClient.newBuilder().followRedirects(redirect).build();
         return c.send(
                 HttpRequest.newBuilder(URI.create(jenkinsRule.getURL() + url))
                         .header(
